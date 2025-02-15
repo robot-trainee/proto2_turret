@@ -80,6 +80,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (control_count >= 10) // 100Hz
     {
       control_count = 0;
+      HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
     }
 
     // ---can
@@ -153,6 +154,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (uart->UpdateData(robot_data))
     {
       HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+    }
+    else
+    {
+      snprintf(printf_buf, 100, "Failed to get uart info");
+      HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
     }
     HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
   }
