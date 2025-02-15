@@ -30,6 +30,7 @@
 #include "rabcl/utils/type.hpp"
 #include "rabcl/interface/uart.hpp"
 #include "rabcl/interface/can.hpp"
+#include "rabcl/component/ld_20mg.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,6 +51,7 @@ char printf_buf[100];
 
 rabcl::Info robot_data;
 rabcl::Uart* uart;
+rabcl::LD_20MG* pitch_motor;
 
 /* USER CODE END PD */
 
@@ -81,6 +83,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       control_count = 0;
       HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
+
+      // ---pitch motor
+      pitch_motor->Updata(robot_data.pitch_vel_);
+      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (uint16_t)pitch_motor->CalcMotorOutput());
+      HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
     }
 
     // ---can
@@ -183,6 +190,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   uart = new rabcl::Uart();
+  pitch_motor = new rabcl::LD_20MG(0.02, 0.91, 34.0 / 29.0);
 
   /* USER CODE END 1 */
 
