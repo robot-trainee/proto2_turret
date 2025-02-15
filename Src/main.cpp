@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "dma.h"
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
@@ -147,12 +148,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  // HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-  if (uart->UpdateData(robot_data))
+  if (huart == &huart2)
   {
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+    if (uart->UpdateData(robot_data))
+    {
+      HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+    }
+    HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
   }
-  HAL_UART_Receive_IT(&huart2, uart->uart_receive_buffer_, 8);
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+  if (huart == &huart2)
+  {
+    HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
+  }
 }
 
 /* USER CODE END 0 */
@@ -187,6 +198,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN_Init();
   MX_I2C1_Init();
   MX_TIM1_Init();
@@ -197,6 +209,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim15);
   HAL_CAN_Start(&hcan);
+  HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
 
   /* USER CODE END 2 */
 
@@ -207,7 +220,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_UART_Receive_IT(&huart2, uart->uart_receive_buffer_, 8);
   }
   /* USER CODE END 3 */
 }
