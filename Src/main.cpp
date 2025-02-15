@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "rabcl/utils/type.hpp"
 #include "rabcl/interface/uart.hpp"
+#include "rabcl/interface/can.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,8 +86,43 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (can_count >= 25) // 40Hz
     {
       can_count = 0;
+      CAN_TxHeaderTypeDef TxHeader;
+      TxHeader.RTR = CAN_RTR_DATA;
+      TxHeader.IDE = CAN_ID_STD;
+      TxHeader.DLC = 8;
+      TxHeader.TransmitGlobalTime = DISABLE;
+      uint32_t TxMailbox;
+      uint8_t TxData[8];
+      if (0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan))
+      {
+        TxHeader.StdId = (uint32_t)rabcl::CAN_ID::CAN_CHASSIS_X_Y;
+        rabcl::Can::Prepare2FloatData(robot_data.chassis_vel_x_, robot_data.chassis_vel_y_, TxData);
+        if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+        {
+          Error_Handler();
+        }
+      }
+      if (0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan))
+      {
+        TxHeader.StdId = (uint32_t)rabcl::CAN_ID::CAN_CHASSIS_Z_YAW;
+        rabcl::Can::Prepare2FloatData(robot_data.chassis_vel_z_, robot_data.yaw_vel_, TxData);
+        if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+        {
+          Error_Handler();
+        }
+      }
+      if (0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan))
+      {
+        TxHeader.StdId = (uint32_t)rabcl::CAN_ID::CAN_PITCH_MODES;
+        uint8_t mode_data[4] = {robot_data.load_mode_, robot_data.fire_mode_, robot_data.speed_mode_, robot_data.chassis_mode_};
+        rabcl::Can::Prepare1Float4IntData(robot_data.pitch_vel_, mode_data, TxData);
+        if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+        {
+          Error_Handler();
+        }
+      }
 
-      // check robot data
+      // ---check robot data
       // snprintf(printf_buf, 100, "chassis_vel_x: %f\n", robot_data.chassis_vel_x_);
       // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
       // snprintf(printf_buf, 100, "chassis_vel_y: %f\n", robot_data.chassis_vel_y_);
