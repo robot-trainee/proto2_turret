@@ -26,6 +26,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "rabcl/utils/type.hpp"
+#include "rabcl/interface/uart.hpp"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -36,6 +42,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+uint16_t control_count = 0;
+uint16_t can_count = 0;
+char printf_buf[100];
+
+rabcl::Info robot_data;
+rabcl::Uart* uart;
 
 /* USER CODE END PD */
 
@@ -58,6 +70,54 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim == &htim15)
+  {
+    control_count++;
+    if (control_count >= 10) // 100Hz
+    {
+      control_count = 0;
+    }
+
+    // ---can
+    can_count++;
+    if (can_count >= 25) // 40Hz
+    {
+      can_count = 0;
+
+      // check robot data
+      // snprintf(printf_buf, 100, "chassis_vel_x: %f\n", robot_data.chassis_vel_x_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "chassis_vel_y: %f\n", robot_data.chassis_vel_y_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "chassis_vel_z: %f\n", robot_data.chassis_vel_z_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "yaw_vel: %f\n", robot_data.yaw_vel_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "pitch_vel_: %f\n", robot_data.pitch_vel_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "load_mode: %d\n", robot_data.load_mode_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "fire_mode: %d\n", robot_data.fire_mode_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "speed_mode: %d\n", robot_data.speed_mode_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+      // snprintf(printf_buf, 100, "chassis_mode: %d\n", robot_data.chassis_mode_);
+      // HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
+    }
+  }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  // HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+  if (uart->UpdateData(robot_data))
+  {
+    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+  }
+  HAL_UART_Receive_IT(&huart2, uart->uart_receive_buffer_, 8);
+}
 
 /* USER CODE END 0 */
 
@@ -69,6 +129,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  uart = new rabcl::Uart();
 
   /* USER CODE END 1 */
 
@@ -98,6 +159,8 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim15);
+  HAL_CAN_Start(&hcan);
 
   /* USER CODE END 2 */
 
@@ -108,6 +171,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_UART_Receive_IT(&huart2, uart->uart_receive_buffer_, 8);
   }
   /* USER CODE END 3 */
 }
