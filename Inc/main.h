@@ -61,6 +61,8 @@ void Error_Handler(void);
 #define MCO_GPIO_Port GPIOF
 #define VCP_TX_Pin GPIO_PIN_2
 #define VCP_TX_GPIO_Port GPIOA
+#define LOAD_MOTOR_ENABLE_Pin GPIO_PIN_4
+#define LOAD_MOTOR_ENABLE_GPIO_Port GPIOA
 #define FIRE_RIGHT_MOTOR_Pin GPIO_PIN_8
 #define FIRE_RIGHT_MOTOR_GPIO_Port GPIOA
 #define FIRE_LEFT_MOTOR_Pin GPIO_PIN_9
@@ -75,8 +77,6 @@ void Error_Handler(void);
 #define VCP_RX_GPIO_Port GPIOA
 #define LD3_Pin GPIO_PIN_3
 #define LD3_GPIO_Port GPIOB
-#define LOAD_MOTOR_ENABLE_Pin GPIO_PIN_4
-#define LOAD_MOTOR_ENABLE_GPIO_Port GPIOB
 #define LOAD_MOTOR_PAHSE_Pin GPIO_PIN_5
 #define LOAD_MOTOR_PAHSE_GPIO_Port GPIOB
 

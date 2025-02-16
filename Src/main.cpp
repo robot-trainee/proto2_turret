@@ -88,6 +88,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       pitch_motor->Updata(robot_data.pitch_vel_);
       __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (uint16_t)pitch_motor->CalcMotorOutput());
       HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+
+      // --- load motor
+      if (robot_data.load_mode_ == 1)
+      {
+        HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_SET);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)120);
+        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+      }
+      else if (robot_data.load_mode_ == 2)
+      {
+        HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_RESET);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)120);
+        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+      }
+      else
+      {
+        HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_SET);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)0);
+        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+      }
     }
 
     // ---can
@@ -164,7 +184,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }
     else
     {
-      snprintf(printf_buf, 100, "Failed to get uart info");
+      snprintf(printf_buf, 100, "Failed to get uart info\n");
       HAL_UART_Transmit(&huart2, (uint8_t*)printf_buf, strlen(printf_buf), 1000);
     }
     HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
