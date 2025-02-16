@@ -87,26 +87,38 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // ---pitch motor
       pitch_motor->Updata(robot_data.pitch_vel_);
       __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (uint16_t)pitch_motor->CalcMotorOutput());
-      HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
 
       // --- load motor
       if (robot_data.load_mode_ == 1)
       {
         HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_SET);
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)120);
-        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)140);
       }
       else if (robot_data.load_mode_ == 2)
       {
         HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_RESET);
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)120);
-        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)140);
       }
       else
       {
         HAL_GPIO_WritePin(LOAD_MOTOR_PAHSE_GPIO_Port, LOAD_MOTOR_PAHSE_Pin, GPIO_PIN_SET);
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, (uint16_t)0);
-        HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+      }
+
+      // ---fire motor
+      if (robot_data.fire_mode_ == 1)
+      {
+        // right
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint16_t)1200);
+        // left
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (uint16_t)1200);
+      }
+      else
+      {
+        // right
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint16_t)1000);
+        // left
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (uint16_t)1000);
       }
     }
 
@@ -241,6 +253,18 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  // ---ESC calibration
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint16_t)2000);
+  HAL_Delay(3000);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint16_t)1000);
+  HAL_Delay(3000);
+
+  // ---start PWM
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+
+  // ---start interrupt processing
   HAL_TIM_Base_Start_IT(&htim15);
   HAL_CAN_Start(&hcan);
   HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
