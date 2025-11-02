@@ -222,7 +222,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   uart = new rabcl::Uart();
-  pitch_motor = new rabcl::LD_20MG(0.02, 0.91, 34.0 / 29.0);
+  pitch_motor = new rabcl::LD_20MG(0.02, 0.91, M_PI / 12, 34.0 / 29.0);
 
   /* USER CODE END 1 */
 
