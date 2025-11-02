@@ -85,7 +85,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       HAL_UART_Receive_DMA(&huart2, uart->uart_receive_buffer_, 8);
 
       // ---pitch motor
-      pitch_motor->Updata(robot_data.pitch_vel_);
+      pitch_motor->Updata(robot_data.pitch_pos_);
       __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (uint16_t)pitch_motor->CalcMotorOutput());
 
       // --- load motor
@@ -146,7 +146,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       if (0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan))
       {
         TxHeader.StdId = (uint32_t)rabcl::CAN_ID::CAN_CHASSIS_Z_YAW;
-        rabcl::Can::Prepare2FloatData(robot_data.chassis_vel_z_, robot_data.yaw_vel_, TxData);
+        rabcl::Can::Prepare2FloatData(robot_data.chassis_vel_z_, robot_data.yaw_pos_, TxData);
         if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
         {
           Error_Handler();
@@ -156,7 +156,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       {
         TxHeader.StdId = (uint32_t)rabcl::CAN_ID::CAN_PITCH_MODES;
         uint8_t mode_data[4] = {robot_data.load_mode_, robot_data.fire_mode_, robot_data.speed_mode_, robot_data.chassis_mode_};
-        rabcl::Can::Prepare1Float4IntData(robot_data.pitch_vel_, mode_data, TxData);
+        rabcl::Can::Prepare1Float4IntData(robot_data.pitch_pos_, mode_data, TxData);
         if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
         {
           Error_Handler();
